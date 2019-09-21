@@ -1,0 +1,13 @@
+
+.vscode/settings.json
+Pipfile
+Pipfile.lock
+sandbox.py
+bgg_tools/bgg_tools/__pycache__/game.cpython-37.pyc
+bgg_tools/bgg_tools/__pycache__/__init__.cpython-37.pyc
+bgg_tools/bgg_tools.egg-info/dependency_links.txt
+bgg_tools/bgg_tools.egg-info/not-zip-safe
+bgg_tools/bgg_tools.egg-info/PKG-INFO
+bgg_tools/bgg_tools.egg-info/requires.txt
+bgg_tools/bgg_tools.egg-info/SOURCES.txt
+bgg_tools/bgg_tools.egg-info/top_level.txt
