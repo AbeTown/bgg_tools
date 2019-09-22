@@ -7,6 +7,7 @@ class Game:
     data = None
     page = 1
     downloaded = False
+    is_valid_game = False
 
     name = None
     year_published = None
@@ -29,25 +30,36 @@ class Game:
         self.id = id
     
     def download_data(self, **kwargs):
-        attempt = get_game_data(self.id, **kwargs)
-        if attempt['success']:
-            self.data = attempt['payload']
-            self.downloaded = True
-            self.name = get_game_name(self.data)
+        download_error = False
+        try:
+            attempt = get_game_data(self.id, **kwargs)
+        except:
+            download_error = True
+        if not download_error:
+            if attempt['success']:
+                self.data = attempt['payload']
+                self.downloaded = True
+                poss_error = self.data[0].findall('error')
+                if len(poss_error) > 0:
+                    if self.data[0].find('error').attrib['message'] == 'Item not found':
+                        self.is_valid_game = False
+                        return
+                self.is_valid_game = True
+                self.name = get_game_name(self.data)
 
-            self.mechanic = get_descriptor('mechanic', self.data, self.id)
-            self.category = get_descriptor('category', self.data, self.id)
-            self.publisher = get_descriptor('publisher', self.data, self.id)
-            self.honor = get_descriptor('publisher', self.data, self.id)
-            self.podcastepisode = get_descriptor('podcastepisode', self.data, self.id)
-            self.version = get_descriptor('version', self.data, self.id)
-            self.family = get_descriptor('family', self.data, self.id)
-            self.artist = get_descriptor('artist', self.data, self.id)
-            self.designer = get_descriptor('designer', self.data, self.id)
-            self.subdomain = get_descriptor('subdomain', self.data, self.id)
-            self.expansion = get_descriptor('expansion', self.data, self.id)
+                self.mechanic = get_descriptor('mechanic', self.data, self.id)
+                self.category = get_descriptor('category', self.data, self.id)
+                self.publisher = get_descriptor('publisher', self.data, self.id)
+                self.honor = get_descriptor('publisher', self.data, self.id)
+                self.podcastepisode = get_descriptor('podcastepisode', self.data, self.id)
+                self.version = get_descriptor('version', self.data, self.id)
+                self.family = get_descriptor('family', self.data, self.id)
+                self.artist = get_descriptor('artist', self.data, self.id)
+                self.designer = get_descriptor('designer', self.data, self.id)
+                self.subdomain = get_descriptor('subdomain', self.data, self.id)
+                self.expansion = get_descriptor('expansion', self.data, self.id)
 
-            self.year_published = get_year_published(self.data)
+                self.year_published = get_year_published(self.data)
     
     def get_ratings(self):
         if self.ratings is None:
@@ -60,7 +72,12 @@ class Game:
                 if more_ratings:
                     ratings += new_ratings['payload']
                     self.page += 1
-                    attempt = get_game_data(self.id, comments=True, page=self.page)
+                    try:
+                        attempt = get_game_data(self.id, comments=True, page=self.page)
+                    except:
+                        more_ratings = False
+                        break
+                    
                     if attempt['success']:
                         data = attempt['payload']
                     else:
@@ -108,7 +125,6 @@ def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, 
 
 def get_comments(data_tree):
     return(data_tree[0].findall("comment"))
-
 
 def get_game_name(data_tree):
     for child in data_tree.iter('name'):
