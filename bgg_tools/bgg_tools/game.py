@@ -22,6 +22,8 @@ class Game:
     family = None
     artist = None
     designer = None  
+    subdomain = None
+    expansion = None
 
     def __init__(self, id):
         self.id = id
@@ -42,6 +44,8 @@ class Game:
             self.family = get_descriptor('family', self.data, self.id)
             self.artist = get_descriptor('artist', self.data, self.id)
             self.designer = get_descriptor('designer', self.data, self.id)
+            self.subdomain = get_descriptor('subdomain', self.data, self.id)
+            self.expansion = get_descriptor('expansion', self.data, self.id)
 
             self.year_published = get_year_published(self.data)
     
@@ -62,9 +66,6 @@ class Game:
                     else:
                         more_ratings = False 
             self.ratings = ratings
-            return(self.ratings)
-        else:
-            return(self.ratings)
 
 def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, h_end=None, page=1):
     
@@ -77,7 +78,7 @@ def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, 
     if any(arg is not None for arg in [comments, stats, historical]):
         request_url += '?'
     if comments is not None:
-        print("comments present!")
+        # print("comments present!")
         request_url += 'comments=1&page=' + str(page) + '&'
     if stats is not None:
         request_url += 'stats=1&'
