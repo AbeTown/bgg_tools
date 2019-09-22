@@ -9,6 +9,7 @@ setup(name='bgg_tools',
       license='MIT',
       packages=['bgg_tools'],
       install_requires=[
-            'requests'
+            'requests',
+            'ElementTree'
       ],
       zip_safe=False)

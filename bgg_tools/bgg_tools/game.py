@@ -1,17 +1,33 @@
 import requests
+from xml.etree import ElementTree as ET
 
 base_url = 'http://www.boardgamegeek.com/xmlapi/'
 
 class Game:
     data = None
     downloaded = False
+    ratings = None
+    name = None
 
     def __init__(self, id):
         self.id = id
     
     def download_data(self, **kwargs):
-        self.data = get_game_data(self.id, **kwargs)
-        self.downloaded = True
+        attempt = get_game_data(self.id, **kwargs)
+        if attempt['success']:
+            self.data = attempt['payload']
+            self.name = get_game_name(self.data)
+            self.downloaded = True
+    
+    def get_ratings(self):
+        if self.ratings is None:
+            self.ratings = get_ratings(self.data)
+            return(self.ratings)
+        else:
+            return(self.ratings)
+    
+
+
 
 
 def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, h_end=None):
@@ -38,6 +54,26 @@ def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, 
     
     print('Downloading', id, "from", request_url)
     response = requests.get(request_url)
-    response
+    if response.status_code == 200:
+        return({
+            'success': True,
+            'payload': ET.fromstring(response.content)
+        })
+    else:
+        return({
+            'success': False,
+            'payload': None
+        }
+        )
 
+    return(response)
 
+def get_game_name(data_tree):
+    for child in data_tree.iter('name'):
+        if 'primary' in child.attrib:
+            if child.attrib['primary'] == 'true':
+                return(child.text)
+
+def get_ratings(data_tree):
+    ratings = [[child.attrib['username'],child.attrib['rating']] for child in data_tree.iter('comment') if child.attrib['rating'] != "N/A"]
+    return(ratings)
