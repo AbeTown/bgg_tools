@@ -5,9 +5,23 @@ base_url = 'http://www.boardgamegeek.com/xmlapi/'
 
 class Game:
     data = None
+    page = 1
     downloaded = False
-    ratings = None
+
     name = None
+    year_published = None
+
+    ratings = None
+
+    mechanic = None
+    category = None
+    publisher = None
+    honor = None
+    podcastepisode = None
+    version = None
+    family = None
+    artist = None
+    designer = None  
 
     def __init__(self, id):
         self.id = id
@@ -16,24 +30,43 @@ class Game:
         attempt = get_game_data(self.id, **kwargs)
         if attempt['success']:
             self.data = attempt['payload']
-            self.name = get_game_name(self.data)
             self.downloaded = True
+            self.name = get_game_name(self.data)
+
+            self.mechanic = get_descriptor('mechanic', self.data, self.id)
+            self.category = get_descriptor('category', self.data, self.id)
+            self.publisher = get_descriptor('publisher', self.data, self.id)
+            self.honor = get_descriptor('publisher', self.data, self.id)
+            self.podcastepisode = get_descriptor('podcastepisode', self.data, self.id)
+            self.version = get_descriptor('version', self.data, self.id)
+            self.family = get_descriptor('family', self.data, self.id)
+            self.artist = get_descriptor('artist', self.data, self.id)
+            self.designer = get_descriptor('designer', self.data, self.id)
+
+            self.year_published = get_year_published(self.data)
     
     def get_ratings(self):
         if self.ratings is None:
-            self.ratings = get_ratings(self.data, self.id)
+            ratings = []
+            more_ratings = True
+            data = self.data
+            while(more_ratings):
+                new_ratings = get_ratings(data, self.id)
+                more_ratings = new_ratings['more']
+                if more_ratings:
+                    ratings += new_ratings['payload']
+                    self.page += 1
+                    attempt = get_game_data(self.id, comments=True, page=self.page)
+                    if attempt['success']:
+                        data = attempt['payload']
+                    else:
+                        more_ratings = False 
+            self.ratings = ratings
             return(self.ratings)
         else:
             return(self.ratings)
 
-    # def export_info(self):
-    #     pass
-    
-
-
-
-
-def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, h_end=None):
+def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, h_end=None, page=1):
     
     if type(id) is int:
         id = str(id)
@@ -45,7 +78,7 @@ def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, 
         request_url += '?'
     if comments is not None:
         print("comments present!")
-        request_url += 'comments=1&'
+        request_url += 'comments=1&page=' + str(page) + '&'
     if stats is not None:
         request_url += 'stats=1&'
     if historical is not None:
@@ -72,6 +105,10 @@ def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, 
     return(response)
 
 
+def get_comments(data_tree):
+    return(data_tree[0].findall("comment"))
+
+
 def get_game_name(data_tree):
     for child in data_tree.iter('name'):
         if 'primary' in child.attrib:
@@ -79,5 +116,25 @@ def get_game_name(data_tree):
                 return(child.text)
 
 def get_ratings(data_tree, id):
-    ratings = [[id,child.attrib['username'],child.attrib['rating']] for child in data_tree.iter('comment') if child.attrib['rating'] != "N/A"]
-    return(ratings)
+    comments = get_comments(data_tree)
+    if len(comments) == 0:
+        return({
+            'more': False,
+            'payload': None
+        })
+    ratings = [[id,child.attrib['username'],child.attrib['rating']] for child in comments if child.attrib['rating'] != "N/A"]
+    return({
+        'more': True,
+        'payload': ratings
+        })
+
+def get_year_published(data_tree):
+    node = data_tree[0].find('yearpublished')
+    if node is not None:
+        return(node.text)
+    return(None)
+
+def get_descriptor(descriptor, data_tree, id):
+    nodes = data_tree[0].findall('boardgame' + descriptor)
+    if len(nodes) > 0:
+        return([[id, node.attrib['objectid'], node.text] for node in nodes])
