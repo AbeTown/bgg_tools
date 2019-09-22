@@ -21,10 +21,13 @@ class Game:
     
     def get_ratings(self):
         if self.ratings is None:
-            self.ratings = get_ratings(self.data)
+            self.ratings = get_ratings(self.data, self.id)
             return(self.ratings)
         else:
             return(self.ratings)
+
+    # def export_info(self):
+    #     pass
     
 
 
@@ -68,12 +71,13 @@ def get_game_data(id, comments=None, stats=None, historical=None, h_begin=None, 
 
     return(response)
 
+
 def get_game_name(data_tree):
     for child in data_tree.iter('name'):
         if 'primary' in child.attrib:
             if child.attrib['primary'] == 'true':
                 return(child.text)
 
-def get_ratings(data_tree):
-    ratings = [[child.attrib['username'],child.attrib['rating']] for child in data_tree.iter('comment') if child.attrib['rating'] != "N/A"]
+def get_ratings(data_tree, id):
+    ratings = [[id,child.attrib['username'],child.attrib['rating']] for child in data_tree.iter('comment') if child.attrib['rating'] != "N/A"]
     return(ratings)
