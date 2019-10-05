@@ -5,7 +5,7 @@
 ## Installation
 Currently, installation is only possible by cloning the repo and building the pacakge locally.
 
-    git clone https://github.com/shelmich/bgg_toos
+    git clone https://github.com/shelmich/bgg_tools
     cd bgg_tools
     pip install -e .
 
@@ -18,9 +18,9 @@ Downloading data for a single game is relatively simple, if you know the BoardGa
     import bgg_tools as bgg
 
     # Game with id=1 is Die Macher
-    game = gbb.Game(id=1) 
+    game = bgg.Game(id=1) 
 
-Additionally, the game's data isn't download until called for:
+Additionally, the game's data isn't downloaded until called for:
 
     game.download_game()
 
